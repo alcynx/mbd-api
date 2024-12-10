@@ -1,8 +1,11 @@
-import express from "express";
-import { loginUser, verifyToken } from "../controllers/authController.js";
+import { Router } from 'express';
+import { login, logout } from '../controllers/authController.js';
+import { verifyToken } from '../middleware/authMiddleware.js';
 
-const router = express.Router();
+const router = Router();
 
-router.post("/login", loginUser);
+// Route untuk login
+router.post('/login', login);
+router.post('/logout', verifyToken, logout);
 
 export default router;

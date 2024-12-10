@@ -1,12 +1,13 @@
-import express from "express";
-import { getAllLeaders, tambahLeaders, updateLeaders, deleteLeaders } from "../controllers/leadersController.js";
-import { verifyToken } from "../controllers/authController.js";
+import { Router } from 'express';
+import { tambahLeaders, editLeader, hapusLeaders, getLeaders } from '../controllers/leadersController.js';
+import { verifyRole } from '../middleware/roleMiddleware.js';
 
-const router = express.Router();
+const router = Router();
 
-router.get("/leaders", verifyToken, getAllLeaders);
-router.post("/leaders", verifyToken, tambahLeaders);
-router.put("/leaders", verifyToken, updateLeaders);
-router.delete("/leaders/:id_leaders", verifyToken, deleteLeaders);
+// Routes untuk leaders
+router.post('/leaders', verifyRole(['adminhq']), tambahLeaders); 
+router.put('/leaders', verifyRole(['adminhq']), editLeader);  
+router.delete('/leaders/:p_id_user', verifyRole(['adminhq']), hapusLeaders); 
+router.get('/leaders', getLeaders);  
 
 export default router;

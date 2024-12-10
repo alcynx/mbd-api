@@ -1,70 +1,44 @@
-import jwt from "jsonwebtoken";
-import db from "../models/db.js"; // Pastikan menambahkan ekstensi .js
+import db from '../models/db.js';
+import { jwt } from '../models/jwt.js';
 
-const JWT_SECRET = process.env.JWT_SECRET;
+export const login = (req, res) => {
+    const { username, password } = req.body;
 
-// Fungsi untuk login
-export const loginUser = (req, res) => {
-  const { username, password } = req.body;
-
-  if (!username || !password) {
-    return res
-      .status(400)
-      .json({ message: "Username dan password harus diisi!" });
-  }
-
-  db.query(
-    "CALL LoginUser(?, ?, @role, @message)",
-    [username, password],
-    (err, results) => {
-      if (err) {
-        return res
-          .status(500)
-          .json({ message: "Error executing procedure", error: err });
-      }
-
-      db.query("SELECT @role AS role, @message AS message", (err, result) => {
+    const query = 'CALL login(?, ?)';
+    db.query(query, [username, password], (err, results) => {
         if (err) {
-          return res
-            .status(500)
-            .json({ message: "Error fetching role/message", error: err });
+            return res.status(500).json({ message: 'Error executing procedure', error: err.message });
+        }
+        if (results[0].length === 0) {
+            return res.status(401).json({ message: 'Username atau password salah' });
         }
 
-        const { role, message } = result[0];
+        const user = results[0][0];
+        
+        // Membuat token dengan masa kadaluarsa 1 jam
+        const token = jwt.sign({
+            id: user.id,
+            username: user.username,
+            role: user.role
+        });
 
-        if (role) {
-          const token = jwt.sign({ username, role }, JWT_SECRET, {
-            expiresIn: "1h",
-          });
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: false, 
+            maxAge: 3600000
+        });
 
-          return res.status(200).json({
-            role,
-            message,
-            token,
-          });
-        } else {
-          return res
-            .status(401)
-            .json({ message: "Username atau password salah" });
-        }
-      });
-    }
-  );
+        res.json({ message: 'Login berhasil', user });
+    });
 };
 
-// Fungsi untuk memverifikasi token
-export const verifyToken = (req, res, next) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1]; // mengambil token setelah "Bearer"
+export const logout = (req, res) => {
+    res.cookie("token", "", {
+        maxAge: 0, 
+    });
 
-  if (!token) return res.status(401).json({ message: "Token tidak ditemukan" });
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err)
-      return res
-        .status(403)
-        .json({ message: "Token tidak valid atau kadaluarsa" });
-    req.user = user;
-    next();
-  });
+    res.json({
+        message: "Berhasil logout",
+    });
 };
+

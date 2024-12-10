@@ -1,26 +1,30 @@
-import express from "express";
-import bodyParser from "body-parser";
-import cors from "cors";
-import dotenv from "dotenv";
-
-dotenv.config();
+import express from 'express';
+import bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
+import lokasiRoutes from './routes/lokasiRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+import leadersRoutes from './routes/leadersRoutes.js';
+import mentorRoutes from './routes/mentorRoutes.js';
+import programRoutes from './routes/programRoutes.js';
+import topikRoutes from './routes/topikRoutes.js';
+import modulRoutes from './routes/modulRoutes.js';
+import eventRoutes from './routes/eventRoutes.js';
 
 const app = express();
-const port = process.env.PORT || 3000;
 
-// Middleware
 app.use(bodyParser.json());
-app.use(cors());
+app.use(cookieParser());
 
-// Routes
-import authRoutes from "./routes/authRoutes.js";
-import leadersRoutes from "./routes/leadersRoutes.js";
-import lokasiRoutes from "./routes/lokasiRoutes.js";
+app.use(lokasiRoutes);
+app.use(authRoutes);
+app.use(leadersRoutes);
+app.use(mentorRoutes);
+app.use(programRoutes);
+app.use(topikRoutes);
+app.use(modulRoutes);
+app.use(eventRoutes);
 
-app.use("/api/auth", authRoutes);
-app.use("/api", leadersRoutes);
-app.use("/api", lokasiRoutes);
-
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+const PORT = 3000;
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
 });
